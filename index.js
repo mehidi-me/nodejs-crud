@@ -13,7 +13,7 @@ const app = express()
 app.use(bodyParser.urlencoded({ extended: true }))
 app.use(express.json({limit:'1mb'}))
 
-const uri = "mongodb+srv://mehidi:mehidi12345@cluster0.uiqpc.mongodb.net/testcrud?retryWrites=true&w=majority";
+const uri = "mongdb database connection url here";
 const client = new MongoClient(uri, { useUnifiedTopology: true,useNewUrlParser: true });
 
  client.connect(() => {
