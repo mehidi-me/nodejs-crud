@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <!-- Bootstrap CDN Link -->
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+        <title>Nodejs CRUD</title>
+
+        <!-- Costom style -->
+        <style>
+            .hide-show {
+                display: none;
+            }
+        </style>
+    </head>
+    <body style="background: #fff;text-align: center;">
+        <h1>NodeJs CRUD</h1>
+        <button class="btn btn btn-info mb-2" id="formHideShow" onclick="formHideShow()">Add User</button>
+
+        <!-- Start Container -->
+        <div class="container">
+
+           <!-- Start form  -->
+           <form class="text-center border border-light p-5 hide-show" id="form" onsubmit=" return adduser()">
+              <p class="h4 mb-4" id="headingText">Add New User</p>
+              <div class="form-row mb-4">
+                 <div class="col">
+                    <!-- First name -->
+                    <input type="text" id="fname" class="form-control" placeholder="First name" name="fname">
+                    <input type="hidden" id="dataid" name="dataid">
+                 </div>
+                 <div class="col">
+                    <!-- Last name -->
+                    <input type="text" id="lname" class="form-control" placeholder="Last name" name="lname">
+                 </div>
+              </div>
+              <!-- E-mail -->
+              <input type="email" id="email" class="form-control mb-4" placeholder="E-mail" name="email">
+              <!-- Password -->
+              <input type="password" id="password" class="form-control mb-4" placeholder="Password" aria-describedby="defaultRegisterFormPasswordHelpBlock" name="password">
+              <!-- Phone number -->
+              <input type="text" id="number" class="form-control" placeholder="Phone number" aria-describedby="defaultRegisterFormPhoneHelpBlock" name="number">
+              <!-- Sign up button -->
+              <button class="btn btn-info my-4 btn-block" id="submitBtn" type="submit">Add User</button>
+           </form>
+           <!-- End Form -->
+
+           <!-- Alert -->
+           <div class="alert alert-success hide-show" role="alert" id="msg">
+              <button type="button" class="close" onclick="hidemsg()" data-dismiss="alert" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+              </button>
+           </div>
+
+           <!-- Start Table -->
+           <div class="table-responsive">
+            <table class="table table-striped table-dark">
+                <thead>
+                   <tr>
+                      <th scope="col">id</th>
+                      <th scope="col">First</th>
+                      <th scope="col">Last</th>
+                      <th scope="col">Email</th>
+                      <th scope="col">Number</th>
+                      <th scope="col">Action</th>
+                   </tr>
+                </thead>
+                <tbody id="showUser">
+                   <!-- show user using javascript -->
+                </tbody>
+             </table>
+           </div>
+           <!-- End Table -->
+
+        </div>
+        <!-- End Container -->
+     </body>
+
+
+<!-- Start site all script -->
+<script>
+
+    // Get all id
+    let form = document.getElementById('form')
+    let submitBtn = document.getElementById('submitBtn')
+    let headingText = document.getElementById('headingText')
+    let formHideShowBtn = document.getElementById('formHideShow')
+    let msg = document.getElementById('msg')
+    let b = document.createElement('b')
+    b.innerText = ''
+    msg.appendChild(b)
+
+    // load all data by api
+    function loadAllData(){
+        let showUser = document.getElementById('showUser')
+        fetch('/getuser')
+        .then(res => res.json())
+        .then(data => {
+            showUser.innerHTML = ''
+            data.forEach((v, key) => {
+                let tr = document.createElement('tr')
+                tr.innerHTML = `<td>${key+1}</td>
+                        <td>${v.fname}</td>
+                        <td>${v.lname}</td>
+                        <td>${v.email}</td>
+                        <td>${v.number}</td>
+                        <td><button onclick="dataEdit('${v._id}')" type="button" class="btn btn-primary mr-3">Edit</button><button onclick="dataDelete('${v._id}')" type="button" class="btn btn-danger">Delete</button></td>`
+                showUser.appendChild(tr)
+                
+            })
+        })
+        .catch(err => console.log(err.error))
+    }
+    // call load all data function
+    loadAllData()
+
+
+    
+    // Form hide show function
+    function formHideShow(){
+        if(form.classList[4]){
+            formHideShowBtn.innerHTML = 'close'
+            formHideShowBtn.classList.remove('btn-info')
+            formHideShowBtn.classList.add('btn-danger')
+        }else{
+            formHideShowBtn.innerHTML = 'Add User'
+            formHideShowBtn.classList.remove('btn-danger')
+            formHideShowBtn.classList.add('btn-info')
+        }
+        form.classList.toggle('hide-show')
+    }
+    // msg hide function
+    function hidemsg(){
+        msg.classList.add('hide-show')
+    }
+
+
+    // data add & update function
+    function adduser(){
+        event.preventDefault();
+
+        // get input value
+        let fname = form.fname.value
+        let dataid = form.dataid.value
+        let lname = form.lname.value
+        let email = form.email.value
+        let number = form.number.value
+        let password = form.password.value
+
+        if(submitBtn.innerText === 'Add User'){
+
+            // add data
+            fetch('/adduser',{
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({fname,lname,email,number,password})
+            })
+            .then((res) => res.json())
+            .then(data => {msg.classList.remove('hide-show');b.innerText = data.msg;loadAllData();form.reset()})
+            .catch(err => console.log(err.error))
+
+        }else{
+
+            // update data
+            fetch('/updatedata',{
+                method: 'PUT',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({dataid,fname,lname,email,number,password})
+            })
+            .then((res) => res.json())
+            .then(data => {msg.classList.remove('hide-show');b.innerText = data.msg;loadAllData();form.reset()})
+            .catch(err => console.log(err.error))
+
+        }
+
+       return false;
+    }
+
+    // update data get function
+    function dataEdit(id){
+        
+        form.classList.remove('hide-show')
+        formHideShowBtn.innerHTML = 'close'
+        formHideShowBtn.classList.remove('btn-info')
+        formHideShowBtn.classList.add('btn-danger')
+
+        // update data get
+        fetch(`/updatedataget/${id}`)
+        .then((res) => res.json())
+        .then(data => {
+
+            // input set value
+            form.fname.value = data.fname
+            form.dataid.value = data._id
+            form.lname.value = data.lname
+            form.email.value = data.email
+            form.password.value = data.password
+            form.number.value = data.number
+
+            submitBtn.innerText = "Update User"
+            headingText.innerText = "Update User"
+
+        })
+        .catch(err => console.log(err.error))
+
+    }
+
+    // data delete function
+    function dataDelete(id) {
+        if(confirm('Are You Sure?')){
+
+            // data delete
+            fetch('/datadelete',{
+                method: 'DELETE',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({id})
+            })
+            .then((res) => res.json())
+            .then(data => {msg.classList.remove('hide-show');b.innerText = data.msg;loadAllData()})
+            .catch(err => console.log(err.error))
+
+        }
+    }
+    
+</script>
+<!-- End site all script -->
+
+
+</html>
